@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.Swagger;
+using IdentityServer4.AccessTokenValidation;
 
 namespace Api.Sample
 {
@@ -24,22 +25,20 @@ namespace Api.Sample
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvcCore()
-                .AddAuthorization()
-                .AddJsonFormatters();
-
-            services.AddAuthentication("Bearer")
-                .AddIdentityServerAuthentication(options =>
+            services.AddAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme)
+                .AddIdentityServerAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme, options =>
                 {
-                    options.RequireHttpsMetadata = false;
                     options.Authority = "http://localhost:5000";
-                    options.ApiName = "socialnetwork";
+                    options.ApiName = "socialnetwork.api";
+                    options.RequireHttpsMetadata = false;
                 });
 
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new Info { Title = "My API", Version = "v1" });
             });
+
+            services.AddMvc();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

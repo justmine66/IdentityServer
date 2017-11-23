@@ -4,18 +4,19 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using IdentityServer4.AccessTokenValidation;
 
 namespace Api.Sample.Controllers
 {
-    [Authorize]
+    [Authorize()]
     [Route("api/[controller]")]
     public class ValuesController : Controller
     {
         // GET api/values
         [HttpGet]
-        public IEnumerable<string> Get()
+        public IEnumerable<string[]> Get()
         {
-            return new string[] { "value1", "value2" };
+            return User.Claims.Select(c => new string[] { c.Type, c.Value });
         }
 
         // GET api/values/5

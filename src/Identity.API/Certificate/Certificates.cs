@@ -22,7 +22,10 @@ namespace Identity.API.Certificate
             {
                 if (stream == null)
                 {
-                    throw new FileNotFoundException(string.Format(CultureInfo.InstalledUICulture, Resources.TokenSignatureCertificateMissing));
+                    throw new FileNotFoundException(
+                        string.Format(CultureInfo.InstalledUICulture,
+                        Resources.TokenSignatureCertificateMissing,
+                        certificateName));
                 }
 
                 return new X509Certificate2(ReadStream(stream), "idsrv3test");

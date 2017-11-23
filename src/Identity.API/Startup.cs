@@ -19,6 +19,7 @@ namespace Identity.API
         {
             services.AddIdentityServer()
                 .AddSigningCredential(Certificates.GetX5092())//token签名证书
+                .AddInMemoryIdentityResources(InMemoryConfigration.GetIdentityResources())
                 .AddTestUsers(InMemoryConfigration.Users().ToList())
                 .AddInMemoryClients(InMemoryConfigration.Clients())
                 .AddInMemoryApiResources(InMemoryConfigration.ApiResource());
