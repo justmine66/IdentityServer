@@ -12,6 +12,9 @@ using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using IdentityModel.Client;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using System.Globalization;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 namespace WebClient.Controllers
 {
@@ -64,11 +67,38 @@ namespace WebClient.Controllers
         }
 
         [Authorize]
-        public async Task<IActionResult> RefreshToken()
+        public async Task<ActionResult> RefreshToken()
         {
-            var authorizationServerInfo = await DiscoveryClient.GetAsync("http://localhost:5000/");
+            DiscoveryResponse authorizationServerInfo = await DiscoveryClient.GetAsync("http://localhost:5000/");
+            var tokenClient = new TokenClient(authorizationServerInfo.TokenEndpoint, "web.code.client", "secret");
+            string refresh_token = await HttpContext.GetTokenAsync("refresh_token");
+            TokenResponse response = await tokenClient.RequestRefreshTokenAsync(refresh_token);
+            string id_token = await HttpContext.GetTokenAsync("id_token");
+            DateTimeOffset expiresAt = DateTimeOffset.UtcNow + TimeSpan.FromSeconds(response.ExpiresIn);
+            
+            var tokens = new[] {
+                new AuthenticationToken(){
+                    Name=OpenIdConnectParameterNames.IdToken,
+                    Value=id_token
+                },
+                new AuthenticationToken(){
+                    Name=OpenIdConnectParameterNames.AccessToken,
+                    Value=response.AccessToken
+                },
+                new AuthenticationToken(){
+                    Name=OpenIdConnectParameterNames.RefreshToken,
+                    Value=response.RefreshToken
+                },
+                new AuthenticationToken(){
+                    Name="expires_at",
+                    Value=expiresAt.ToString("o",CultureInfo.InvariantCulture)
+                }
+            };
+            AuthenticateResult authenticateResult = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            authenticateResult.Properties.StoreTokens(tokens);
 
-            return Ok();
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, authenticateResult.Principal, authenticateResult.Properties);
+            return new RedirectResult("/");
         }
     }
 }
